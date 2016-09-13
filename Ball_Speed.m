@@ -121,17 +121,17 @@ for j = 150:-1:1
     [v1,v2] = pol2cart(theta,rho);
     v = [v1,v2];
     % predicted backward position
-    P_back_pred = P_back(j+1,:) + v ;
-    
+    P_back_pred = P_back(j+1,:) + v ;    
+       
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if ~isempty(area2)
-        [~,sort_index] = sort(area2, 'descend');
-        
+        [~,sort_index] = sort(area2, 'descend');        
+         sort_centroids = cent2(sort_index(:),:);
         
         for k = 1:numel(sort_index);
             b = 0;
-            if (norm(cent2(sort_index(k),:)-P_back_pred) < d)
+            if (norm(sort_centroids(k,:)-P_back_pred) < d)
                 break;
             end
             b = 1;
