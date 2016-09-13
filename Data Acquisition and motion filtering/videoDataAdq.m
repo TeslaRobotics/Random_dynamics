@@ -18,8 +18,6 @@ foregroundDetector = vision.ForegroundDetector('NumGaussians', 3,'NumTrainingFra
 path = 'C:\Documents and Settings\Pablito\My Documents\MATLAB\Roulette\Data Acquisition and motion filtering\rsc\images\';
 ballFilterMask  = imread(strcat(path, 'ball_mask.bmp'));
 rotorFilterMask = imread(strcat(path, 'rotor_mask.bmp'));
-ballTresholdMask = imread(strcat(path, 'tresh_mask.bmp'));
-
 
 i = 1;
 rotorPositionArray = ones(1,2);
@@ -39,8 +37,8 @@ while ~isDone(videoReader)
     [area,centroid,~] = step(rotorBlobAnalysis, bw);
     
     if ~isempty(area)
-        [~,I2] = max(area);
-        rotorPositionArray(i,:) = centroid(I2,:);
+        [~,I] = max(area);
+        rotorPositionArray(i,:) = centroid(I,:);
     else
         rotorPositionArray(i,:) = [1,1];
     end
@@ -49,11 +47,11 @@ while ~isDone(videoReader)
 end
 
 
-ballPositionArray = zeros(1,2);
+ballPositionArray = ones(1,2);
 
-for  j = 1:numel(ballForegroundCell)
+for  i = 150:numel(ballForegroundCell)
        
-    foreground = ballForegroundCell{j};
+    foreground = ballForegroundCell{i};
     
     maskedForeground = and(foreground,ballFilterMask);
     [area,centroid,~] = step(ballBlobAnalysis, maskedForeground);
@@ -64,12 +62,57 @@ for  j = 1:numel(ballForegroundCell)
      else
          ballPositionArray(i,:) = [1,1];
      end
-     
-    ballPosition = round(ballPositionArray(i,:));
-    if and(ballTresholdMask(ballPosition(2),ballPosition(1)),j > 100)
-        break;
+
+end
+ 
+
+for  i = 150:-1:1
+       
+    foreground = ballForegroundCell{i};
+    
+    maskedForeground = and(foreground,ballFilterMask);
+    [area,centroid,~] = step(ballBlobAnalysis, maskedForeground);
+    
+    
+        % vector backward speed aproximation
+    previousDisplacement = ballPositionArray(i+1,:) - ballPositionArray(i+2,:);
+    radius = 30; 
+    
+    [theta,rho] = cart2pol(previousDisplacement(1),previousDisplacement(2));
+    theta = theta + 0.01;
+    rho   = rho - 1;
+    [v1,v2] = pol2cart(theta,rho);
+    predictedDisplacement = [v1,v2];
+    predictedBallPosition = ballPositionArray(i+1,:) + predictedDisplacement ;    
+       
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    if ~isempty(area)
+        [~,sortIndexArray] = sort(area, 'descend');        
+         sortCentroidArray = centroid(sortIndexArray(:),:);
+        
+        for j = 1:numel(sortIndexArray);
+            b = 0;
+            if (norm(sortCentroidArray(j,:)-predictedBallPosition) < radius)
+                break;
+            end
+            b = 1;
+        end
+        
+        if ~b
+            I = sortIndexArray(j);
+            ballPositionArray(i,:) = centroid(I,:);            
+        else
+            ballPositionArray(i,:) = ballPositionArray(i+1,:) + predictedBallPosition ;
+        end
+        
+    else
+        ballPositionArray(i,:) = ballPositionArray(i+1,:) + predictedBallPosition ;
     end
- end
+end
+
+
+
 %  release(videoPlayer);
 %  release(videoReader);
 %  delete(videoPlayer); 
