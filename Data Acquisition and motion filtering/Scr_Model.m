@@ -1,31 +1,31 @@
 clear
 clc
 
-vid = 'E:\video_data\R1.mp4';
-[P_ball,P_rotor] = videoDataAdq(vid);
+videoSource = 'E:\video_data\R1.mp4';
+[vectorPositionArray,rotorPositionArray] = videoDataAdq(videoSource);
 
-c = position_centered(P_ball);
+centerPosition = position_centered(vectorPositionArray);
 
 
-P_c(:,1) = P_ball(:,1)-c(1);
-P_c(:,2) = P_ball(:,2)-c(2);
+vectorPositionArray(:,1) = vectorPositionArray(:,1)-centerPosition(1);
+vectorPositionArray(:,2) = vectorPositionArray(:,2)-centerPosition(2);
 
-V_c(:,1) = diff(P_c(:,1));
-V_c(:,2) = diff(P_c(:,2));
+vectorSpeedArray(:,1) = diff(vectorPositionArray(:,1));
+vectorSpeedArray(:,2) = diff(vectorPositionArray(:,2));
 
-A_c(:,1) = diff(V_c(:,1));
-A_c(:,2) = diff(V_c(:,2));
+vectorAccelerationArray(:,1) = diff(vectorSpeedArray(:,1));
+vectorAccelerationArray(:,2) = diff(vectorSpeedArray(:,2));
 
-r = sqrt(P_c(:,1).^2 + P_c(:,2).^2);
-v = sqrt(V_c(:,1).^2 + V_c(:,2).^2);
-a = sqrt(A_c(:,1).^2 + A_c(:,2).^2);
+positionArray = sqrt(vectorPositionArray(:,1).^2 + vectorPositionArray(:,2).^2);
+speedArray = sqrt(vectorSpeedArray(:,1).^2 + vectorSpeedArray(:,2).^2);
+AccelerationArray = sqrt(vectorAccelerationArray(:,1).^2 + vectorAccelerationArray(:,2).^2);
 
 
 subplot(3,1,1);
 hold on
-plot(r);
+plot(positionArray);
 axis([0 500 0 200]);
-vf = r;
+vf = positionArray;
 [vf_len,~]=size(vf);
 n  = 10;
 
@@ -37,11 +37,11 @@ plot(x,y,'Color','r');
 
 subplot(3,1,2);
 hold on
-plot(v);
+plot(speedArray);
 axis([0 500 0 200]);
 
 
-vf = v;
+vf = speedArray;
 [vf_len,~]=size(vf);
 n  = 4;
 
