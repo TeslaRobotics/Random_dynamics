@@ -6,7 +6,7 @@ clear all; %#ok<CLSCR>
 close all
 clc;
 %% Read Video
-record = 'R3.mp4';
+record = 'R2.mp4';
 url = strcat('E:\video_data\',record);
 videoReader = vision.VideoFileReader(url);  
 
@@ -114,12 +114,15 @@ for j = 150:-1:1
     
     % vector backward speed aproximation
     v = P_back(j+1,:) - P_back(j+2,:);
-    d = norm(v)+30;    
+    d = 30;    
     [theta,rho] = cart2pol(v(1),v(2));
     theta = theta + 0.01;
     rho   = rho - 1;
     [v1,v2] = pol2cart(theta,rho);
     v = [v1,v2];
+    % predicted backward position
+    P_back_pred = P_back(j+1,:) + v ;
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     if ~isempty(area2)
@@ -128,7 +131,7 @@ for j = 150:-1:1
         
         for k = 1:numel(sort_index);
             b = 0;
-            if (norm(cent2(sort_index(k),:)-P_back(j+1,:)) < d)
+            if (norm(cent2(sort_index(k),:)-P_back_pred) < d)
                 break;
             end
             b = 1;
@@ -156,15 +159,19 @@ for j = 1:150
     
         % vector backward speed aproximation
     v = P_back(j+1,:) - P_back(j+2,:);
-    d = norm(v)+10;    
+    d = 30;    
     [theta,rho] = cart2pol(v(1),v(2));
     theta = theta - 0.1;
     rho   = rho - 1;
     [v1,v2] = pol2cart(theta,rho);
-    v = [v1,v2];
+    v = [v1,v2];    
+    
+    % predicted backward position
+    P_back_pred = P_back(j+1,:) + v ;
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
-    circle_vector = P_back(j+1,:);
+    circle_vector = P_back_pred;
     circle_vector(3)= d;    
     result = insertShape(videoFrame, 'circle', circle_vector, 'Color', 'green','LineWidth', 1);
     
