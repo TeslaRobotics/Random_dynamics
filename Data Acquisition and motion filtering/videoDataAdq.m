@@ -25,6 +25,8 @@ for i = 1:20
     videoFrame = step(videoReader);
     step(foregroundDetector,videoFrame); 
 end
+
+reset(videoReader);
 i = 1;
 rotorPositionArray = ones(1,2);
 while ~isDone(videoReader)
