@@ -6,7 +6,7 @@ clear all; %#ok<CLSCR>
 close all
 clc;
 %% Read Video
-record = 'R2.mp4';
+record = 'R1.mp4';
 url = strcat('E:\video_data\',record);
 videoReader = vision.VideoFileReader(url);  
 
@@ -160,12 +160,9 @@ for j = 1:150
         % vector backward speed aproximation
     v = P_back(j+1,:) - P_back(j+2,:);
     d = 30;    
-    [theta,rho] = cart2pol(v(1),v(2));
-    theta = theta - 0.1;
-    rho   = rho - 1;
-    [v1,v2] = pol2cart(theta,rho);
-    v = [v1,v2];    
-    
+    rotationAngle = 20;
+    r = [cosd(rotationAngle),-sind(rotationAngle);sind(rotationAngle),cosd(rotationAngle)];
+    v = v*r;
     % predicted backward position
     P_back_pred = P_back(j+1,:) + v ;
     

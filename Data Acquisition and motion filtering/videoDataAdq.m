@@ -3,7 +3,7 @@ function [ballPositionArray,rotorPositionArray] = videoDataAdq(url)
 %url = 'E:\video_data\R2.mp4';
 videoReader = vision.VideoFileReader(url);
 
-%videoPlayer = vision.VideoPlayer;
+% videoPlayer = vision.VideoPlayer;
 
 ballBlobAnalysis = vision.BlobAnalysis('BoundingBoxOutputPort', true, ...
     'AreaOutputPort', true, 'CentroidOutputPort', true, ...
@@ -18,7 +18,13 @@ foregroundDetector = vision.ForegroundDetector('NumGaussians', 3,'NumTrainingFra
 path = 'C:\Documents and Settings\Pablito\My Documents\MATLAB\Roulette\Data Acquisition and motion filtering\rsc\images\';
 ballFilterMask  = imread(strcat(path, 'ball_mask.bmp'));
 rotorFilterMask = imread(strcat(path, 'rotor_mask.bmp'));
+tresholdMask    = imread(strcat(path, 'tresh_mask.bmp'));
 
+
+for i = 1:20
+    videoFrame = step(videoReader);
+    step(foregroundDetector,videoFrame); 
+end
 i = 1;
 rotorPositionArray = ones(1,2);
 while ~isDone(videoReader)
@@ -62,11 +68,14 @@ for  i = 150:numel(ballForegroundCell)
      else
          ballPositionArray(i,:) = [1,1];
      end
-
+    ballPosition = round(ballPositionArray(i,:)); 
+    if tresholdMask(ballPosition(2),ballPosition(1))
+        break;
+    end
 end
  
 
-for  i = 150:-1:1
+for  i = 149:-1:1
        
     foreground = ballForegroundCell{i};
     
@@ -75,14 +84,11 @@ for  i = 150:-1:1
     
     
         % vector backward speed aproximation
-    previousDisplacement = ballPositionArray(i+1,:) - ballPositionArray(i+2,:);
-    radius = 30; 
-    
-    [theta,rho] = cart2pol(previousDisplacement(1),previousDisplacement(2));
-    theta = theta + 0.01;
-    rho   = rho - 1;
-    [v1,v2] = pol2cart(theta,rho);
-    predictedDisplacement = [v1,v2];
+    previousDisplacement = ballPositionArray(i+1,:) - ballPositionArray(i+2,:);       
+    radius = 30;
+    rotation = 20;
+    R = [cosd(rotation),-sind(rotation);sind(rotation),cosd(rotation)];    
+    predictedDisplacement = previousDisplacement*R;
     predictedBallPosition = ballPositionArray(i+1,:) + predictedDisplacement ;    
        
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,14 +109,19 @@ for  i = 150:-1:1
             I = sortIndexArray(j);
             ballPositionArray(i,:) = centroid(I,:);            
         else
-            ballPositionArray(i,:) = ballPositionArray(i+1,:) + predictedBallPosition ;
+            ballPositionArray(i,:) = predictedBallPosition ;
         end
         
     else
-        ballPositionArray(i,:) = ballPositionArray(i+1,:) + predictedBallPosition ;
+        ballPositionArray(i,:) = predictedBallPosition ;
     end
+    
+%     circle_vector = ballPositionArray(i,:);
+%     circle_vector(3)= radius;
+%     result = insertShape(maskedForeground*0.5, 'circle', circle_vector, 'Color', 'green','LineWidth', 1); 
+%     step(videoPlayer, result); 
+%     pause(0.1);
 end
-
 
 
 %  release(videoPlayer);

@@ -4,9 +4,6 @@ clc
 videoSource = 'E:\video_data\R1.mp4';
 [vectorPositionArray,rotorPositionArray] = videoDataAdq(videoSource);
 
-nVectorPositionArray = size(vectorPositionArray)-150;
-vectorPositionArray = vectorPositionArray(15:nVectorPositionArray,:);
-
 centerPosition = position_centered(vectorPositionArray);
 
 
